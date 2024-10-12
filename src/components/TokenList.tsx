@@ -7,32 +7,31 @@ import AuthLayout from "~/layout/AuthLayout";
 import TokenCard from "./token-card/Card";
 
 const TokenList = () => {
-  const tokens = useSwappableTokens();
+    const tokens = useSwappableTokens();
 
-  return (
-    <AppLayout>
-      <AuthLayout>
-        <div className="mb-8 md:bg-secondary md:p-8">
-          <Header />
-          <ul>
-            {tokens.length === 0 && <div>No tokens to see</div>}
-            {tokens.map((token, _index) => {
-              return (
-                <div
-                  key={token.id}
-                  className={clsx({
-                    hidden: _index !== 0,
-                  })}
-                >
-                  <TokenCard token={token} />
+    return (
+        <AppLayout>
+            <AuthLayout>
+                <div className="mb-8 md:p-8">
+                    <Header />
+                    <ul>
+                        {tokens.length === 0 && <div>No tokens to see</div>}
+                        {tokens.map((token, _index) => {
+                            return (
+                                <div
+                                    key={token.id}
+                                    className={clsx({
+                                        hidden: _index !== 0,
+                                    })}>
+                                    <TokenCard token={token} />
+                                </div>
+                            );
+                        })}
+                    </ul>
                 </div>
-              );
-            })}
-          </ul>
-        </div>
-      </AuthLayout>
-    </AppLayout>
-  );
+            </AuthLayout>
+        </AppLayout>
+    );
 };
 
 export default TokenList;

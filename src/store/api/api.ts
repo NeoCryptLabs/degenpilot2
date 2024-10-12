@@ -14,69 +14,69 @@ import { setupWeb3modal } from "~/utils/setup-web3modal";
 import { setIsInit, setShowLanding } from "../app";
 import { CACHE_VERSION } from "../middlewares/persist";
 const refetchInterval = (fetchingFunction: CallableFunction, timer: number) => {
-  return setInterval(fetchingFunction, timer);
+    return setInterval(fetchingFunction, timer);
 };
 
 export const initStore = async (store: EnhancedStore<IRootState>) => {
-  const localHistory: TokenHistory = JSON.parse(
-    (await localforage.getItem(`history_${CACHE_VERSION}`)) ??
-      `{"left": [],"right": []}`
-  );
-
-  const landing: boolean = await localforage.getItem("landing");
-
-  store.dispatch(setShowLanding(landing));
-  store.dispatch(initHistory(localHistory));
-  try {
-    const localChains: ChainInterface[] = JSON.parse(
-      (await localforage.getItem(`chains_${CACHE_VERSION}`)) ?? "[]"
+    const localHistory: TokenHistory = JSON.parse(
+        (await localforage.getItem(`history_${CACHE_VERSION}`)) ??
+            `{"left": [],"right": []}`
     );
 
-    const localTokens: TokenInterface[] = JSON.parse(
-      (await localforage.getItem(`tokens_${CACHE_VERSION}`)) ?? "[]"
-    );
+    const landing: boolean = await localforage.getItem("landing");
 
-    if (!localChains.length) throw Error("No networks on local");
-    if (!localTokens.length) throw new Error("No tokens on local");
-    store.dispatch(setChains(localChains.map((n) => new Chain(n))));
-    store.dispatch(setTokens(localTokens.map((t) => new Token(t))));
-    store.dispatch(setWeb3Modal(await setupWeb3modal(localChains)));
-    store.dispatch(setIsInit(true));
-  } catch (_) {
-    Promise.all([
-      store.dispatch(setShowLanding(true)),
-      store.dispatch(fetchChains() as any).unwrap(),
-      store.dispatch(fetchTokens() as any).unwrap(),
-      store.dispatch(setIsInit(true)),
-    ]);
-  }
+    store.dispatch(setShowLanding(landing));
+    store.dispatch(initHistory(localHistory));
+    try {
+        const localChains: ChainInterface[] = JSON.parse(
+            (await localforage.getItem(`chains_${CACHE_VERSION}`)) ?? "[]"
+        );
 
-  refetchInterval(() => {
-    store.dispatch(fetchTokens() as any);
-  }, 1000 * 60 * 5); // 1 minute
+        const localTokens: TokenInterface[] = JSON.parse(
+            (await localforage.getItem(`tokens_${CACHE_VERSION}`)) ?? "[]"
+        );
+
+        if (!localChains.length) throw new Error("No networks on local");
+        if (!localTokens.length) throw new Error("No tokens on local");
+        store.dispatch(setChains(localChains.map((n) => new Chain(n))));
+        store.dispatch(setTokens(localTokens.map((t) => new Token(t))));
+        store.dispatch(setWeb3Modal(await setupWeb3modal(localChains)));
+        store.dispatch(setIsInit(true));
+    } catch (_) {
+        Promise.all([
+            store.dispatch(setShowLanding(true)),
+            store.dispatch(fetchChains() as any).unwrap(),
+            store.dispatch(fetchTokens() as any).unwrap(),
+            store.dispatch(setIsInit(true)),
+        ]);
+    }
+
+    refetchInterval(() => {
+        store.dispatch(fetchTokens() as any);
+    }, 1000 * 60 * 5); // 5 minutes
 };
 
 export const fetchChains = createAsyncThunk<ChainInterface[]>(
-  "api/chains",
-  async () => {
-    const config = (await setupWeb3modal(chains)) as any;
-    dispatch(setWeb3Modal(config));
-    return chains;
-  }
+    "api/chains",
+    async () => {
+        const config = (await setupWeb3modal(chains)) as any;
+        dispatch(setWeb3Modal(config));
+        return chains;
+    }
 );
 
 export const fetchTokens = createAsyncThunk("api/tokens", async () => {
-  try {
-    const { data } = await axios.get(
-      "https://swipr-api-d30d3b6ad1d2.herokuapp.com/tokens"
-    );
+    try {
+        const { data } = await axios.get(
+            "https://swipr-api-d30d3b6ad1d2.herokuapp.com/tokens"
+        );
 
-    const tokens = data.map((token) => new Token(token));
-    console.log("🚀 ~ fetchTokens ~ tokens:", tokens);
+        const tokens = data.map((token) => new Token(token));
+        console.log("🚀 ~ fetchTokens ~ tokens:", tokens);
 
-    return tokens.map((token) => token.toObject()) as TokenInterface[];
-  } catch (e) {
-    console.error(e);
-  }
-  return [];
+        return tokens.map((token) => token.toObject()) as TokenInterface[];
+    } catch (e) {
+        console.error(e);
+    }
+    return [];
 });
